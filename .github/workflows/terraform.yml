@@ -32,9 +32,24 @@ jobs:
       - name: Terraform Init
         run: terraform init
 
+        
+
       - name: Terraform Plan
         run: terraform plan -out=tfplan
 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main'
         run: terraform apply -auto-approve tfplan
+
+      - name: Install Istio
+        run: |
+          curl -L https://istio.io/downloadIstio | sh -
+          cd istio-*
+          export PATH=$PWD/bin:$PATH
+          istioctl install --set profile=demo -y
+
+      - name: Apply Kubernetes manifests
+        run: |
+          kubectl apply -f istio-ingressgateway.yaml
+          kubectl apply -f virtual-service.yaml
+          kubectl apply -f frontend-deployment.yaml
