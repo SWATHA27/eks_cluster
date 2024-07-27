@@ -1,15 +1,13 @@
 name: Terraform
 
 on:
-  push:
-    branches:
-      - main  # Run on pushes to the main branch
   workflow_dispatch:  # Allow manual trigger for both apply and destroy
 
 jobs:
-  terraform:
+  terraform-apply:
     name: 'Terraform Apply'
     runs-on: ubuntu-latest
+    if: github.event.inputs.action == 'apply'
 
     env:
       AWS_REGION: ap-south-1  # Set your AWS region here
@@ -37,14 +35,23 @@ jobs:
         run: terraform plan -out=tfplan
 
       - name: Terraform Apply
-        if: github.ref == 'refs/heads/main'
         run: terraform apply -auto-approve tfplan
+
+      - name: Download and Install Istio
+        run: |
+          curl -L https://istio.io/downloadIstio | sh -
+          ISTIO_VERSION=$(ls -d istio-*)
+          echo "export PATH=\$PATH:$(pwd)/$ISTIO_VERSION/bin" >> $GITHUB_ENV
+          echo "Istio version $ISTIO_VERSION installed."
+
+      - name: Verify Istio Installation
+        run: |
+          source $GITHUB_ENV
+          istioctl x precheck
 
       - name: Install Istio
         run: |
-          curl -L https://istio.io/downloadIstio | sh -
-          cd istio-*
-          export PATH=$PWD/bin:$PATH
+          source $GITHUB_ENV
           istioctl install --set profile=demo -y
 
       - name: Apply Kubernetes manifests
@@ -56,9 +63,10 @@ jobs:
       - name: Apply ALB Ingress Controller
         run: kubectl apply -f alb-ingress-controller.yaml
 
-  destroy:
+  terraform-destroy:
     name: 'Terraform Destroy'
     runs-on: ubuntu-latest
+    if: github.event.inputs.action == 'destroy'
 
     env:
       AWS_REGION: ap-south-1  # Set your AWS region here
