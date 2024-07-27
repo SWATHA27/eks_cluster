@@ -1,13 +1,22 @@
 name: Terraform
 
 on:
-  workflow_dispatch:  # Allow manual trigger for both apply and destroy
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform'
+        required: true
+        default: 'apply'
+        type: choice
+        options:
+          - apply
+          - destroy
 
 jobs:
   terraform-apply:
     name: 'Terraform Apply'
     runs-on: ubuntu-latest
-    if: github.event.inputs.action == 'apply'
+    if: ${{ github.event.inputs.action == 'apply' }}
 
     env:
       AWS_REGION: ap-south-1  # Set your AWS region here
@@ -66,7 +75,7 @@ jobs:
   terraform-destroy:
     name: 'Terraform Destroy'
     runs-on: ubuntu-latest
-    if: github.event.inputs.action == 'destroy'
+    if: ${{ github.event.inputs.action == 'destroy' }}
 
     env:
       AWS_REGION: ap-south-1  # Set your AWS region here
