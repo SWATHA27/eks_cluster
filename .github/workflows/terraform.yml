@@ -47,27 +47,26 @@ jobs:
         run: |
           curl -L https://istio.io/downloadIstio | sh -
           ISTIO_VERSION=$(ls -d istio-*)
-          export PATH=$PATH:$(pwd)/$ISTIO_VERSION/bin
+          echo "ISTIO_VERSION=$ISTIO_VERSION" >> $GITHUB_ENV
+          echo "PATH=\$PATH:$(pwd)/$ISTIO_VERSION/bin" >> $GITHUB_ENV
 
       - name: Verify Istio Installation
         if: "!contains(github.event.head_commit.message, 'destroy')"
         run: |
-          ISTIO_VERSION=$(ls -d istio-*)
-          export PATH=$PATH:$(pwd)/$ISTIO_VERSION/bin
+          source $GITHUB_ENV
+          echo $PATH
           istioctl x precheck
 
       - name: Install Istio
         if: "!contains(github.event.head_commit.message, 'destroy')"
         run: |
-          ISTIO_VERSION=$(ls -d istio-*)
-          export PATH=$PATH:$(pwd)/$ISTIO_VERSION/bin
+          source $GITHUB_ENV
           istioctl install --set profile=demo -y
 
       - name: Apply Kubernetes manifests
         if: "!contains(github.event.head_commit.message, 'destroy')"
         run: |
-          ISTIO_VERSION=$(ls -d istio-*)
-          export PATH=$PATH:$(pwd)/$ISTIO_VERSION/bin
+          source $GITHUB_ENV
           kubectl apply -f istio-ingressgateway.yaml
           kubectl apply -f virtual-service.yaml
           kubectl apply -f frontend-deployment.yaml
@@ -75,6 +74,5 @@ jobs:
       - name: Apply ALB Ingress Controller
         if: "!contains(github.event.head_commit.message, 'destroy')"
         run: |
-          ISTIO_VERSION=$(ls -d istio-*)
-          export PATH=$PATH:$(pwd)/$ISTIO_VERSION/bin
+          source $GITHUB_ENV
           kubectl apply -f alb-ingress-controller.yaml
