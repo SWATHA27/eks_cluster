@@ -47,8 +47,8 @@ jobs:
         run: |
           curl -L https://istio.io/downloadIstio | sh -
           ISTIO_VERSION=$(ls -d istio-*)
+          echo "ISTIO_VERSION=$ISTIO_VERSION" >> $GITHUB_ENV
           echo "export PATH=\$PATH:$(pwd)/$ISTIO_VERSION/bin" >> $GITHUB_ENV
-          echo "Istio version $ISTIO_VERSION installed."
 
       - name: Verify Istio Installation
         if: "!contains(github.event.head_commit.message, 'destroy')"
