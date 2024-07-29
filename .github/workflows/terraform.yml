@@ -42,19 +42,19 @@ jobs:
         if: "contains(github.event.head_commit.message, 'destroy')"
         run: terraform destroy -auto-approve
 
-      - name: Download and Install Istio
+      - name: Download Istio
         if: "!contains(github.event.head_commit.message, 'destroy')"
         run: |
           curl -L https://istio.io/downloadIstio | sh -
           ISTIO_VERSION=$(ls -d istio-*)
           echo "ISTIO_VERSION=$ISTIO_VERSION" >> $GITHUB_ENV
-          echo "PATH=\$PATH:$(pwd)/$ISTIO_VERSION/bin" >> $GITHUB_ENV
+          echo "PATH=$PATH:$(pwd)/$ISTIO_VERSION/bin" >> $GITHUB_ENV
 
       - name: Verify Istio Installation
         if: "!contains(github.event.head_commit.message, 'destroy')"
         run: |
           source $GITHUB_ENV
-          echo $PATH
+          echo "PATH=$PATH"
           istioctl x precheck
 
       - name: Install Istio
